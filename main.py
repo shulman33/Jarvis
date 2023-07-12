@@ -11,6 +11,7 @@ from spotipy.oauth2 import SpotifyClientCredentials, SpotifyOAuth
 from pvrecorder import PvRecorder
 import requests
 import geocoder
+from dotenv import load_dotenv
 
 
 class VoiceAssistant:
@@ -27,7 +28,10 @@ class VoiceAssistant:
     """
 
     def __init__(self):
-        openai.api_key = "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"
+        load_dotenv()
+
+        openai.api_key = os.getenv('OPENAI_KEY')
+        spotify_secret = os.getenv('SPOTIFY_SECRET')
 
         # Initialize the assistant's history
         self.history = [
@@ -35,11 +39,13 @@ class VoiceAssistant:
         ]
 
         self.sp = spotipy.Spotify(auth_manager=SpotifyOAuth(client_id="5fad2c1d19a04ace8faea9ebfef72f4d",
-                                                       client_secret="865c2d6da73e41ceb825b5f7698045aa",
+                                                       client_secret=spotify_secret,
                                                        redirect_uri="https://www.samjshulman.com/",
                                                        scope="user-modify-playback-state user-read-playback-state"))
 
     def get_weather(self):
+
+        weather_key = os.getenv('WEATHER_KEY')
 
         g = geocoder.ip('me')
         print(g.latlng)
@@ -47,7 +53,7 @@ class VoiceAssistant:
         longitude = g.latlng[1]
         latlong = str(latitude) + "," + str(longitude)
 
-        url = "https://api.weatherapi.com/v1/current.json?key=4dde2df7fea444309d8184309231207&q=" + latlong
+        url = "https://api.weatherapi.com/v1/current.json?key=" + weather_key + "&q=" + latlong
         print(url)
 
         response = requests.get(url)
