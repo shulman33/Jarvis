@@ -12,7 +12,8 @@ from pvrecorder import PvRecorder
 import requests
 import geocoder
 from dotenv import load_dotenv
-
+from plugins.weather import Weather
+from plugins.spotify import Spotify
 
 class VoiceAssistant:
     """
@@ -30,6 +31,9 @@ class VoiceAssistant:
     def __init__(self):
         load_dotenv()
 
+        self.weather = Weather()
+        self.spotify = Spotify()
+
         openai.api_key = os.getenv('OPENAI_KEY')
         spotify_secret = os.getenv('SPOTIFY_SECRET')
 
@@ -43,41 +47,12 @@ class VoiceAssistant:
                                                        redirect_uri="https://www.samjshulman.com/",
                                                        scope="user-modify-playback-state user-read-playback-state"))
 
+
     def get_weather(self):
-
-        weather_key = os.getenv('WEATHER_KEY')
-
-        g = geocoder.ip('me')
-        print(g.latlng)
-        latitude = g.latlng[0]
-        longitude = g.latlng[1]
-        latlong = str(latitude) + "," + str(longitude)
-
-        url = "https://api.weatherapi.com/v1/current.json?key=" + weather_key + "&q=" + latlong
-        print(url)
-
-        response = requests.get(url)
-
-        return {
-            "city": response.json()['location']['name'],
-            "state": response.json()['location']['region'],
-            "temperature": response.json()['current']['temp_f'],
-        }
+        return self.weather.get_weather()
 
     def play_spotify_playlist(self, playlist_name):
-
-        # Get the user's playlists
-        playlists = self.sp.current_user_playlists()
-
-        devices = self.sp.devices()
-        device_id = devices['devices'][0]['id']
-        print(devices)
-        print(device_id)
-
-        for playlist in playlists['items']:
-            if playlist['name'].lower() == playlist_name.lower():
-                self.sp.start_playback(context_uri=playlist['uri'], device_id=device_id)
-                break
+        self.spotify.play_spotify_playlist(playlist_name)
 
     def pause_music(self):
 
@@ -109,6 +84,7 @@ class VoiceAssistant:
             while True:
                 keyword_index = porcupine.process(recoder.read())
                 if keyword_index >= 0:
+                    assistant.speak("How can I help you?")
                     print("Keyword Detected")
                     print("Listening...")
                     duration = 3
